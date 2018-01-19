@@ -1,0 +1,11 @@
+#vscode
+/.vscode/**/*
+
+# go
+/vendor/**/*
+/vendor/vendor.json
+
+#db
+db_files/**/*
+
+*.exe
