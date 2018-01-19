@@ -3,7 +3,7 @@
 
 # go
 /vendor/**/*
-/vendor/vendor.json
+!/vendor/vendor.json
 
 #db
 db_files/**/*
