@@ -12,7 +12,7 @@ var kvdbtest_db *kvdb_t
 
 func Test_KVDB_Open(t *testing.T) {
 	err := os.RemoveAll(KVDB_PATH)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		t.Error("Delete kv db folder fail.", err)
 		return
 	}

@@ -12,7 +12,7 @@ var sqldbtest_lastid int64
 
 func Test_SQLDB_Open(t *testing.T) {
 	err := os.Remove(SQDB_PATH)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		t.Error("Delete sql db file.", err)
 		return
 	}
