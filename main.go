@@ -2,10 +2,8 @@ package main
 
 import (
 	"fasnap-server-go/data"
-	"flag"
 	"log"
-
-	"github.com/gin-gonic/gin"
+	"os"
 )
 
 func main() {
@@ -15,34 +13,22 @@ func main() {
 	}
 	defer data.Close()
 
-	router := gin.Default()
+	var port string
+	if arg, ok := findArg("port"); ok {
+		port = ":" + arg
+	} else {
+		port = ":8017"
+	}
 
-	router.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"message": "pong"})
-	})
+	Run(port)
+}
 
-	router.Use(gin.BasicAuth(gin.Accounts{"admin": "admin"}))
-
-	router.GET("/snapshot-data-log/:version", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"version": "1"})
-	})
-
-	router.GET("/snapshot-list/:date/:version", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"version": ctx.Param("version")})
-	})
-
-	router.GET("/snapshot/:date/:version", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"version": ctx.Param("version"), "date": ctx.Param("date")})
-	})
-
-	router.PUT("/snapshot/:date/:version", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"version": ctx.Param("version")})
-	})
-
-	router.DELETE("/snapshot/:date/:version", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"version": ctx.Param("version")})
-	})
-
-	port := flag.String("port", ":8017", "http listen port")
-	router.Run(*port)
+func findArg(name string) (string, bool) {
+	optionKey := "-" + name
+	for i, arg := range os.Args {
+		if arg == optionKey && (i+1) < len(os.Args) {
+			return os.Args[i+1], true
+		}
+	}
+	return "", false
 }
