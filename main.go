@@ -4,6 +4,7 @@ import (
 	"fasnap-server-go/data"
 	"log"
 	"os"
+	"os/signal"
 )
 
 func main() {
@@ -20,7 +21,13 @@ func main() {
 		port = ":8017"
 	}
 
-	Run(port)
+	go Run(port)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+
+	s := <-c
+	log.Println("Got signal:", s)
 }
 
 func findArg(name string) (string, bool) {
