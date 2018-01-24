@@ -39,10 +39,52 @@
 			"versionExact": "v1.2"
 		},
 		{
+			"checksumSHA1": "doRRSsuqcqRkOryb28WVLoSueHs=",
+			"path": "github.com/golang/leveldb",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
+			"checksumSHA1": "8C+Zzw7/nLpan5roIvc6/a70N/4=",
+			"path": "github.com/golang/leveldb/crc",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
+			"checksumSHA1": "tuD2M4VSohddY5xZ6byd9y0OqI8=",
+			"path": "github.com/golang/leveldb/db",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
+			"checksumSHA1": "RdHpsv2V3LDCw9fw70Q6wMnUSP8=",
+			"path": "github.com/golang/leveldb/memdb",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
+			"checksumSHA1": "cOKaG1/Fv3Nu0HS+8OH6BKc0nI4=",
+			"path": "github.com/golang/leveldb/record",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
+			"checksumSHA1": "Y64jekVLsJkdbjVqbzZPdyixXH8=",
+			"path": "github.com/golang/leveldb/table",
+			"revision": "259d9253d71996b7778a3efb4144fe4892342b18",
+			"revisionTime": "2017-01-07T01:01:02Z"
+		},
+		{
 			"checksumSHA1": "cRxfZM32wP1Ry67s3jLRoYxAz/E=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
 			"revisionTime": "2017-11-13T18:07:20Z"
+		},
+		{
+			"checksumSHA1": "OV+/R43DDDJ/Gxrx9oQob/K7sL0=",
+			"path": "github.com/golang/snappy",
+			"revision": "553a641470496b2327abcac10b36396bd98e45c9",
+			"revisionTime": "2017-02-15T23:32:05Z"
 		},
 		{
 			"checksumSHA1": "kum8izZy1+pVfDiApW5hT2HoH1w=",

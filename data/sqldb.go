@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -13,34 +14,37 @@ const SQL_UPDATE_SNAPSHOT_VERSION = "UPDATE snapshot_version SET version = ? WHE
 const SQL_INSERT_SNAPSHOT_VERSION = "INSERT INTO snapshot_version (user, date, version) VALUES(?, ?, ?)"
 const SQL_DELETE_SNAPSHOT_VERSION = "DELETE FROM snapshot_version WHERE id = ?"
 
-type sqlDb struct {
+type sqldb_t struct {
 	impl *sql.DB
 }
 
-func openSqlDb(path string) (db sqlDb, err error) {
+func (db *sqldb_t) open(path string) error {
+	if db == nil {
+		return errors.New("db is nil")
+	}
+	if db.impl != nil {
+		db.close()
+	}
+
+	var err error
 	db.impl, err = sql.Open("sqlite3", path)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 
 	//Create table
 	_, _, err = db.exec(SQL_CREATE_SNAPSHOT_VERSION)
-	if err != nil {
-		log.Println(err)
-	}
-	return
+	return err
 }
 
-func (db *sqlDb) close() (err error) {
-	err = db.impl.Close()
-	if err != nil {
-		log.Println(err)
+func (db *sqldb_t) close() (err error) {
+	if db.impl == nil {
+		return nil
 	}
-	return
+	return db.impl.Close()
 }
 
-func (db *sqlDb) getSnapshotVersion(user, date string) (version int64, err error) {
+func (db *sqldb_t) getSnapshotVersion(user, date string) (version int64, err error) {
 	err = db.impl.QueryRow(SQL_SELECT_SNAPSHOT_VERSION, user, date).Scan(&version)
 	if err != nil {
 		log.Println(err)
@@ -48,7 +52,7 @@ func (db *sqlDb) getSnapshotVersion(user, date string) (version int64, err error
 	return
 }
 
-func (db *sqlDb) insertSnapshotVersion(user, date string, version int64) (id int64, err error) {
+func (db *sqldb_t) insertSnapshotVersion(user, date string, version int64) (id int64, err error) {
 	id, _, err = db.exec(SQL_INSERT_SNAPSHOT_VERSION, user, date, version)
 	if err != nil {
 		log.Println(err)
@@ -56,7 +60,7 @@ func (db *sqlDb) insertSnapshotVersion(user, date string, version int64) (id int
 	return
 }
 
-func (db *sqlDb) updateSnapshotVersion(id, version int64) (rowCnt int64, err error) {
+func (db *sqldb_t) updateSnapshotVersion(id, version int64) (rowCnt int64, err error) {
 	_, rowCnt, err = db.exec(SQL_UPDATE_SNAPSHOT_VERSION, version, id)
 	if err != nil {
 		log.Println(err)
@@ -64,7 +68,7 @@ func (db *sqlDb) updateSnapshotVersion(id, version int64) (rowCnt int64, err err
 	return
 }
 
-func (db *sqlDb) deleteSnapshotVersion(id int64) (rowCnt int64, err error) {
+func (db *sqldb_t) deleteSnapshotVersion(id int64) (rowCnt int64, err error) {
 	_, rowCnt, err = db.exec(SQL_DELETE_SNAPSHOT_VERSION, id)
 	if err != nil {
 		log.Println(err)
@@ -72,7 +76,7 @@ func (db *sqlDb) deleteSnapshotVersion(id int64) (rowCnt int64, err error) {
 	return
 }
 
-func (db *sqlDb) exec(sqlText string, args ...interface{}) (lastId, rowCnt int64, err error) {
+func (db *sqldb_t) exec(sqlText string, args ...interface{}) (lastId, rowCnt int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = db.impl.Prepare(sqlText)
 	if err != nil {

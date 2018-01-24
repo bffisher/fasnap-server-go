@@ -5,82 +5,77 @@ import (
 	"testing"
 )
 
-const DB_PATH = "./testsqldb"
+const SQDB_PATH = "../db_files/testsqldb"
 
-func openDB() (db sqlDb, err error) {
-	os.Remove(DB_PATH)
-	db, err = openSqlDb(DB_PATH)
-	return
-}
+var sqldbtest_db *sqldb_t
+var sqldbtest_lastid int64
 
-func closeDB(db sqlDb) {
-	db.close()
-	os.Remove(DB_PATH)
-}
-
-func Test_Snapshot(t *testing.T) {
-	db, err := openDB()
-	defer closeDB(db)
-
+func Test_SQLDB_Open(t *testing.T) {
+	err := os.Remove(SQDB_PATH)
 	if err != nil {
-		t.Error("Open fail", err)
+		t.Error("Delete sql db file.", err)
 		return
 	}
 
-	t.Log("Open sql db sucessfully.")
-
-	var lastID, rowCnt int64
-	lastID, err = db.insertSnapshotVersion("admin", "2018-01-19", int64(1429))
+	sqldbtest_db = &sqldb_t{}
+	err = sqldbtest_db.open(SQDB_PATH)
 	if err != nil {
-		t.Error("Insert fail", err)
-		return
+		t.Error(err)
+	}
+}
+
+func Test_SQLDB_Insert(t *testing.T) {
+	lastID, err := sqldbtest_db.insertSnapshotVersion("admin", "2018-01-19", int64(1429))
+	if err != nil {
+		t.Error(err)
 	} else if lastID <= 0 {
-		t.Error("Insert fail, lastID = ", lastID)
-		return
+		t.Error("lastID <= 0 ", lastID)
+	} else {
+		sqldbtest_lastid = lastID
 	}
-
-	t.Log("Insert sucessfully.")
-
-	rowCnt, err = db.updateSnapshotVersion(lastID, int64(1430))
+}
+func Test_SQLDB_Update(t *testing.T) {
+	rowCnt, err := sqldbtest_db.updateSnapshotVersion(sqldbtest_lastid, int64(1430))
 	if err != nil {
-		t.Error("Update fail", err)
-		return
+		t.Error(err)
 	} else if rowCnt != 1 {
-		t.Error("Update fail, rowCnt = ", rowCnt)
+		t.Error("rowCnt != 1", rowCnt)
+	}
+}
+
+func Test_SQLDB_Get_Exist(t *testing.T) {
+	version, err := sqldbtest_db.getSnapshotVersion("admin", "2018-01-19")
+	if err != nil {
+		t.Error(err)
+	} else if version != 1430 {
+		t.Error("version != 1430 ", version)
+	}
+}
+
+func Test_SQLDB_Get_Not_Exist(t *testing.T) {
+	version, err := sqldbtest_db.getSnapshotVersion("admin1", "2018-01-19")
+	if err == nil {
+		t.Error("version=", version)
+	}
+}
+
+func Test_SQLDB_Delete(t *testing.T) {
+	_, err := sqldbtest_db.deleteSnapshotVersion(sqldbtest_lastid)
+	if err != nil {
+		t.Error(err)
 		return
 	}
-
-	t.Log("Update sucessfully.")
 
 	var version int64
-	version, err = db.getSnapshotVersion("admin", "2018-01-19")
-	if err != nil {
-		t.Error("Get fail(exist)", err)
-		return
-	} else if version != 1430 {
-		t.Error("Get fail(exist), version != 1430, version is ", version)
-		return
-	}
-
-	version, err = db.getSnapshotVersion("admin1", "2018-01-19")
-	if err == nil {
-		t.Error("Get fail(not exist) version=", version)
-		return
-	}
-
-	t.Log("Get sucessfully.")
-
-	rowCnt, err = db.deleteSnapshotVersion(lastID)
-	if err != nil {
-		t.Error("Delete fail", err)
-		return
-	}
-
-	version, err = db.getSnapshotVersion("admin", "2018-01-19")
+	version, err = sqldbtest_db.getSnapshotVersion("admin", "2018-01-19")
 	if err == nil || version != 0 {
-		t.Error("Delete fail")
-		return
+		t.Error("Delete fail, data exist yet. lastid, version=", sqldbtest_lastid, version)
 	}
+}
 
-	t.Log("Delete sucessfully.")
+func Test_SQLDB_Close(t *testing.T) {
+	err := sqldbtest_db.close()
+	if err != nil {
+		t.Error(err)
+	}
 }
