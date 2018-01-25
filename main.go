@@ -2,9 +2,11 @@ package main
 
 import (
 	"fasnap-server-go/data"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 func main() {
@@ -14,28 +16,14 @@ func main() {
 	}
 	defer data.Close()
 
-	var port string
-	if arg, ok := findArg("port"); ok {
-		port = ":" + arg
-	} else {
-		port = ":8017"
-	}
+	port := flag.Int("port", 8017, "server port")
+	flag.Parse()
 
-	go Run(port)
+	go Run(":" + strconv.Itoa(*port))
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
 
 	s := <-c
 	log.Println("Got signal:", s)
-}
-
-func findArg(name string) (string, bool) {
-	optionKey := "-" + name
-	for i, arg := range os.Args {
-		if arg == optionKey && (i+1) < len(os.Args) {
-			return os.Args[i+1], true
-		}
-	}
-	return "", false
 }
