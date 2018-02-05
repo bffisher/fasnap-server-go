@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"github.com/golang/leveldb"
 )
 
-type kvdbType struct {
+type KVDB struct {
 	impl *leveldb.DB
 }
 
@@ -19,19 +19,19 @@ const (
 
 var versionKey = []byte{sysKeyCategory, 0}
 
-func (db *kvdbType) open(path string) (err error) {
+func (db *KVDB) Open(path string) (err error) {
 	if db == nil {
 		return errors.New("db is nil")
 	}
 	if db.impl != nil {
-		db.close()
+		db.Close()
 	}
 
 	db.impl, err = leveldb.Open(path, nil)
 	return
 }
 
-func (db *kvdbType) close() error {
+func (db *KVDB) Close() error {
 	if db.impl == nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func (db *kvdbType) close() error {
 	return db.impl.Close()
 }
 
-func (db *kvdbType) getVersion() (uint64, error) {
+func (db *KVDB) GetDataVersion() (uint64, error) {
 	res, err := db.impl.Get(versionKey, nil)
 	if err != nil {
 		return 0, err
@@ -48,13 +48,13 @@ func (db *kvdbType) getVersion() (uint64, error) {
 	return binary.BigEndian.Uint64(res), nil
 }
 
-func (db *kvdbType) setVersion(version uint64) error {
+func (db *KVDB) SetDataVersion(version uint64) error {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, version)
 	return db.impl.Set(versionKey, buf, nil)
 }
 
-func (db *kvdbType) getSnapshot(id, version int64) (string, error) {
+func (db *KVDB) GetSnapshot(id, version int64) (string, error) {
 	key := genSnapshotKey(id, version)
 	res, err := db.impl.Get(key, nil)
 	if err != nil {
@@ -64,7 +64,7 @@ func (db *kvdbType) getSnapshot(id, version int64) (string, error) {
 	return string(res), nil
 }
 
-func (db *kvdbType) setSnapshot(id, version int64, content string) error {
+func (db *KVDB) SetSnapshot(id, version int64, content string) error {
 	key := genSnapshotKey(id, version)
 	return db.impl.Set(key, []byte(content), nil)
 }

@@ -25,3 +25,7 @@ func ExpiredOrNotActiveToken() gin.H {
 func CanntHandleToken() gin.H {
 	return newError("019", "Couldn't handle this token!")
 }
+
+func CanntGetData() gin.H {
+	return newError("021", "Couldn't get data!")
+}

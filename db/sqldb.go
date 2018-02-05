@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"database/sql"
@@ -17,16 +17,16 @@ const (
 	sqlDeleteSnapshotVer = "DELETE FROM snapshot_version WHERE id = ?"
 )
 
-type sqldbType struct {
+type SQLDB struct {
 	impl *sql.DB
 }
 
-func (db *sqldbType) open(path string) error {
+func (db *SQLDB) Open(path string) error {
 	if db == nil {
 		return errors.New("db is nil")
 	}
 	if db.impl != nil {
-		db.close()
+		db.Close()
 	}
 
 	var err error
@@ -40,14 +40,14 @@ func (db *sqldbType) open(path string) error {
 	return err
 }
 
-func (db *sqldbType) close() (err error) {
+func (db *SQLDB) Close() (err error) {
 	if db.impl == nil {
 		return nil
 	}
 	return db.impl.Close()
 }
 
-func (db *sqldbType) getSnapshotVersion(user, date string) (version int64, err error) {
+func (db *SQLDB) GetSnapshotVersion(user, date string) (version int64, err error) {
 	err = db.impl.QueryRow(sqlSelectSnapshotVer, user, date).Scan(&version)
 	if err != nil {
 		log.Println(err)
@@ -55,7 +55,7 @@ func (db *sqldbType) getSnapshotVersion(user, date string) (version int64, err e
 	return
 }
 
-func (db *sqldbType) insertSnapshotVersion(user, date string, version int64) (id int64, err error) {
+func (db *SQLDB) InsertSnapshotVersion(user, date string, version int64) (id int64, err error) {
 	id, _, err = db.exec(sqlInsertSnapshotVer, user, date, version)
 	if err != nil {
 		log.Println(err)
@@ -63,7 +63,7 @@ func (db *sqldbType) insertSnapshotVersion(user, date string, version int64) (id
 	return
 }
 
-func (db *sqldbType) updateSnapshotVersion(id, version int64) (rowCnt int64, err error) {
+func (db *SQLDB) UpdateSnapshotVersion(id, version int64) (rowCnt int64, err error) {
 	_, rowCnt, err = db.exec(sqlUpdateSnapshotVer, version, id)
 	if err != nil {
 		log.Println(err)
@@ -71,7 +71,7 @@ func (db *sqldbType) updateSnapshotVersion(id, version int64) (rowCnt int64, err
 	return
 }
 
-func (db *sqldbType) deleteSnapshotVersion(id int64) (rowCnt int64, err error) {
+func (db *SQLDB) DeleteSnapshotVersion(id int64) (rowCnt int64, err error) {
 	_, rowCnt, err = db.exec(sqlDeleteSnapshotVer, id)
 	if err != nil {
 		log.Println(err)
@@ -79,7 +79,7 @@ func (db *sqldbType) deleteSnapshotVersion(id int64) (rowCnt int64, err error) {
 	return
 }
 
-func (db *sqldbType) exec(sqlText string, args ...interface{}) (lastID, rowCnt int64, err error) {
+func (db *SQLDB) exec(sqlText string, args ...interface{}) (lastID, rowCnt int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = db.impl.Prepare(sqlText)
 	if err != nil {

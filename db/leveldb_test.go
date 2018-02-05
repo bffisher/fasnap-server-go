@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"os"
@@ -10,7 +10,7 @@ const (
 	kvdbTestContent = `{"date":"2018-01-11", "items":[{"rist":"low", amount:1222}, {"rist":"high", amount:2221}]}`
 )
 
-var kvdbTestDB *kvdbType
+var kvdbTestDB *KVDB
 
 func Test_KVDB_Open(t *testing.T) {
 	err := os.RemoveAll(kvdbTestDBPath)
@@ -19,34 +19,34 @@ func Test_KVDB_Open(t *testing.T) {
 		return
 	}
 
-	kvdbTestDB = &kvdbType{}
-	err = kvdbTestDB.open(kvdbTestDBPath)
+	kvdbTestDB = &KVDB{}
+	err = kvdbTestDB.Open(kvdbTestDBPath)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_KVDB_Set(t *testing.T) {
-	err := kvdbTestDB.setVersion(23)
+	err := kvdbTestDB.SetDataVersion(23)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = kvdbTestDB.setSnapshot(1234, 12, kvdbTestContent)
+	err = kvdbTestDB.SetSnapshot(1234, 12, kvdbTestContent)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_KVDB_Get(t *testing.T) {
-	ver, err := kvdbTestDB.getVersion()
+	ver, err := kvdbTestDB.GetDataVersion()
 	if err != nil {
 		t.Error(err)
 	} else if ver != 23 {
 		t.Error("Result(version) is incrrect.", ver, 22)
 	}
 
-	snap, err := kvdbTestDB.getSnapshot(1234, 12)
+	snap, err := kvdbTestDB.GetSnapshot(1234, 12)
 	if err != nil {
 		t.Error(err)
 	} else if snap != kvdbTestContent {
@@ -55,7 +55,7 @@ func Test_KVDB_Get(t *testing.T) {
 }
 
 func Test_KVDB_Close(t *testing.T) {
-	err := kvdbTestDB.close()
+	err := kvdbTestDB.Close()
 	if err != nil {
 		t.Error(err)
 	}
