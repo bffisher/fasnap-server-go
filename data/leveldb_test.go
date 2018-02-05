@@ -25,18 +25,30 @@ func Test_KVDB_Open(t *testing.T) {
 }
 
 func Test_KVDB_Set(t *testing.T) {
-	err := kvdbtest_db.setSnapshot(1234, 12, KVDB_TEST_CONTENT)
+	err := kvdbtest_db.setVersion(23)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = kvdbtest_db.setSnapshot(1234, 12, KVDB_TEST_CONTENT)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_KVDB_Get(t *testing.T) {
-	res, err := kvdbtest_db.getSnapshot(1234, 12)
+	ver, err := kvdbtest_db.getVersion()
 	if err != nil {
 		t.Error(err)
-	} else if res != KVDB_TEST_CONTENT {
-		t.Error("Result is incrrect.", res, KVDB_TEST_CONTENT)
+	} else if ver != 23 {
+		t.Error("Result(version) is incrrect.", ver, 23)
+	}
+
+	snap, err := kvdbtest_db.getSnapshot(1234, 12)
+	if err != nil {
+		t.Error(err)
+	} else if snap != KVDB_TEST_CONTENT {
+		t.Error("Result(snapshot) is incrrect.", snap, KVDB_TEST_CONTENT)
 	}
 }
 
