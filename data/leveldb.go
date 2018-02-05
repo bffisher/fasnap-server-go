@@ -8,20 +8,18 @@ import (
 	"github.com/golang/leveldb"
 )
 
-const _KEY_PREFIXS_SYSTEM = "0"
-const _KEY_PREFIXS_SNAPSHOT = "1"
-
-var _KEY_VERSION = []byte(_KEY_PREFIXS_SYSTEM + "_data_version")
-
-type kvdb_t struct {
+type kvdbType struct {
 	impl *leveldb.DB
 }
 
-type kvdb_key_t struct {
-	id, version int64
-}
+const (
+	sysKeyCategory      byte = 0
+	snapshotKeyCategory byte = 1
+)
 
-func (db *kvdb_t) open(path string) (err error) {
+var versionKey = []byte{sysKeyCategory, 0}
+
+func (db *kvdbType) open(path string) (err error) {
 	if db == nil {
 		return errors.New("db is nil")
 	}
@@ -33,7 +31,7 @@ func (db *kvdb_t) open(path string) (err error) {
 	return
 }
 
-func (db *kvdb_t) close() error {
+func (db *kvdbType) close() error {
 	if db.impl == nil {
 		return nil
 	}
@@ -41,23 +39,24 @@ func (db *kvdb_t) close() error {
 	return db.impl.Close()
 }
 
-func (db *kvdb_t) getVersion() (int64, error) {
-	res, err := db.impl.Get(_KEY_VERSION, nil)
+func (db *kvdbType) getVersion() (uint64, error) {
+	res, err := db.impl.Get(versionKey, nil)
 	if err != nil {
 		return 0, err
 	}
 
-	return bytesToInt64(res), nil
+	return binary.BigEndian.Uint64(res), nil
 }
 
-func (db *kvdb_t) setVersion(version int64) error {
-	return db.impl.Set(_KEY_VERSION, toBytes(version), nil)
+func (db *kvdbType) setVersion(version uint64) error {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, version)
+	return db.impl.Set(versionKey, buf, nil)
 }
 
-func (db *kvdb_t) getSnapshot(id, version int64) (string, error) {
-	key := kvdb_key_t{id, version}
-	res, err := db.impl.Get(toBytes(key), nil)
-
+func (db *kvdbType) getSnapshot(id, version int64) (string, error) {
+	key := genSnapshotKey(id, version)
+	res, err := db.impl.Get(key, nil)
 	if err != nil {
 		return "", err
 	}
@@ -65,20 +64,15 @@ func (db *kvdb_t) getSnapshot(id, version int64) (string, error) {
 	return string(res), nil
 }
 
-func (db *kvdb_t) setSnapshot(id, version int64, content string) error {
-	key := kvdb_key_t{id, version}
-	return db.impl.Set(toBytes(key), []byte(content), nil)
+func (db *kvdbType) setSnapshot(id, version int64, content string) error {
+	key := genSnapshotKey(id, version)
+	return db.impl.Set(key, []byte(content), nil)
 }
 
-func toBytes(val interface{}) []byte {
+func genSnapshotKey(id, version int64) []byte {
 	buf := &bytes.Buffer{}
-	binary.Write(buf, binary.BigEndian, val)
+	buf.WriteByte(snapshotKeyCategory)
+	binary.Write(buf, binary.BigEndian, id)
+	binary.Write(buf, binary.BigEndian, version)
 	return buf.Bytes()
-}
-
-func bytesToInt64(val []byte) int64 {
-	var res int64
-	buf := bytes.NewBuffer(val)
-	binary.Read(buf, binary.BigEndian, &res)
-	return res
 }

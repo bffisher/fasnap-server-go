@@ -1,21 +1,23 @@
 package data
 
-var sqldb *sqldb_t
-var kvdb *kvdb_t
+var sqldb *sqldbType
+var kvdb *kvdbType
 
+//Open and init database
 func Open(rootPath string) error {
 	var err error
 
-	sqldb = &sqldb_t{}
+	sqldb = &sqldbType{}
 	err = sqldb.open(rootPath + "/sqldb")
 	if err != nil {
 		return err
 	}
 
-	kvdb = &kvdb_t{}
+	kvdb = &kvdbType{}
 	return kvdb.open(rootPath + "/kvdb")
 }
 
+//Close database
 func Close() {
 	sqldb.close()
 	kvdb.close()

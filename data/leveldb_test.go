@@ -5,55 +5,57 @@ import (
 	"testing"
 )
 
-const KVDB_PATH = "../db_files/testkvdb"
-const KVDB_TEST_CONTENT = `{"date":"2018-01-11", "items":[{"rist":"low", amount:1222}, {"rist":"high", amount:2221}]}`
+const (
+	kvdbTestDBPath  = "../db_files/testkvdb"
+	kvdbTestContent = `{"date":"2018-01-11", "items":[{"rist":"low", amount:1222}, {"rist":"high", amount:2221}]}`
+)
 
-var kvdbtest_db *kvdb_t
+var kvdbTestDB *kvdbType
 
 func Test_KVDB_Open(t *testing.T) {
-	err := os.RemoveAll(KVDB_PATH)
+	err := os.RemoveAll(kvdbTestDBPath)
 	if err != nil && !os.IsNotExist(err) {
 		t.Error("Delete kv db folder fail.", err)
 		return
 	}
 
-	kvdbtest_db = &kvdb_t{}
-	err = kvdbtest_db.open(KVDB_PATH)
+	kvdbTestDB = &kvdbType{}
+	err = kvdbTestDB.open(kvdbTestDBPath)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_KVDB_Set(t *testing.T) {
-	err := kvdbtest_db.setVersion(23)
+	err := kvdbTestDB.setVersion(23)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = kvdbtest_db.setSnapshot(1234, 12, KVDB_TEST_CONTENT)
+	err = kvdbTestDB.setSnapshot(1234, 12, kvdbTestContent)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func Test_KVDB_Get(t *testing.T) {
-	ver, err := kvdbtest_db.getVersion()
+	ver, err := kvdbTestDB.getVersion()
 	if err != nil {
 		t.Error(err)
 	} else if ver != 23 {
-		t.Error("Result(version) is incrrect.", ver, 23)
+		t.Error("Result(version) is incrrect.", ver, 22)
 	}
 
-	snap, err := kvdbtest_db.getSnapshot(1234, 12)
+	snap, err := kvdbTestDB.getSnapshot(1234, 12)
 	if err != nil {
 		t.Error(err)
-	} else if snap != KVDB_TEST_CONTENT {
-		t.Error("Result(snapshot) is incrrect.", snap, KVDB_TEST_CONTENT)
+	} else if snap != kvdbTestContent {
+		t.Error("Result(snapshot) is incrrect.", snap, kvdbTestContent)
 	}
 }
 
 func Test_KVDB_Close(t *testing.T) {
-	err := kvdbtest_db.close()
+	err := kvdbTestDB.close()
 	if err != nil {
 		t.Error(err)
 	}
