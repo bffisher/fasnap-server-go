@@ -13,11 +13,8 @@ type KVDB struct {
 }
 
 const (
-	sysKeyCategory      byte = 0
-	snapshotKeyCategory byte = 1
+	snapshotKeyCategory byte = iota
 )
-
-var versionKey = []byte{sysKeyCategory, 0}
 
 func (db *KVDB) Open(path string) (err error) {
 	if db == nil {
@@ -39,23 +36,39 @@ func (db *KVDB) Close() error {
 	return db.impl.Close()
 }
 
-func (db *KVDB) GetDataVersion() (uint64, error) {
-	res, err := db.impl.Get(versionKey, nil)
-	if err != nil {
-		return 0, err
-	}
+//GetCurVersion Get current data version of user
+// func (db *KVDB) GetCurVersion(user string) (uint64, error) {
+// 	key := genVersionKey(user)
+// 	buf, err := db.impl.Get(key, nil)
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	return binary.BigEndian.Uint64(res), nil
-}
+// 	return binary.BigEndian.Uint64(buf), nil
+// }
 
-func (db *KVDB) SetDataVersion(version uint64) error {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, version)
-	return db.impl.Set(versionKey, buf, nil)
-}
+//NewVersion Return a new data version of user
+// func (db *KVDB) NewVersion(user string) (uint64, error) {
+// 	key := genVersionKey(user)
+// 	buf, err := db.impl.Get(key, nil)
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-func (db *KVDB) GetSnapshot(id, version int64) (string, error) {
-	key := genSnapshotKey(id, version)
+// 	ver := binary.BigEndian.Uint64(buf)
+// 	ver++
+// 	binary.BigEndian.PutUint64(buf, ver)
+
+// 	err = db.impl.Set(key, buf, nil)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+
+// 	return ver, nil
+// }
+
+func (db *KVDB) GetSnapshot(version int64) (string, error) {
+	key := genSnapshotKey(version)
 	res, err := db.impl.Get(key, nil)
 	if err != nil {
 		return "", err
@@ -64,15 +77,21 @@ func (db *KVDB) GetSnapshot(id, version int64) (string, error) {
 	return string(res), nil
 }
 
-func (db *KVDB) SetSnapshot(id, version int64, content string) error {
-	key := genSnapshotKey(id, version)
+func (db *KVDB) SetSnapshot(version int64, content string) error {
+	key := genSnapshotKey(version)
 	return db.impl.Set(key, []byte(content), nil)
 }
 
-func genSnapshotKey(id, version int64) []byte {
+func genSnapshotKey(version int64) []byte {
 	buf := &bytes.Buffer{}
 	buf.WriteByte(snapshotKeyCategory)
-	binary.Write(buf, binary.BigEndian, id)
 	binary.Write(buf, binary.BigEndian, version)
 	return buf.Bytes()
 }
+
+// func genVersionKey(user string) []byte {
+// 	buf := &bytes.Buffer{}
+// 	buf.WriteByte(snapshotKeyCategory)
+// 	buf.Write([]byte(user))
+// 	return buf.Bytes()
+// }

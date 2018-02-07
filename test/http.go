@@ -5,21 +5,45 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 )
 
-func HttpGetJson(uri string, router *gin.Engine, reqHandle func(*http.Request)) (gin.H, error) {
-	req := httptest.NewRequest("GET", uri, nil)
+func HttpGetJson(uri string, engine *gin.Engine, reqHandle func(*http.Request)) (gin.H, error) {
+	req := httptest.NewRequest(http.MethodGet, uri, nil)
 
 	if reqHandle != nil {
 		reqHandle(req)
 	}
 
+	return sendHTTPJSON(engine, req)
+}
+
+func HttpPutJson(uri string, engine *gin.Engine, content string, reqHandle func(*http.Request)) (gin.H, error) {
+	req := httptest.NewRequest(http.MethodPut, uri, strings.NewReader(content))
+	defer req.Body.Close()
+	if reqHandle != nil {
+		reqHandle(req)
+	}
+	return sendHTTPJSON(engine, req)
+}
+
+func HttpDeleteJson(uri string, engine *gin.Engine, reqHandle func(*http.Request)) (gin.H, error) {
+	req := httptest.NewRequest(http.MethodDelete, uri, nil)
+
+	if reqHandle != nil {
+		reqHandle(req)
+	}
+
+	return sendHTTPJSON(engine, req)
+}
+
+func sendHTTPJSON(engine *gin.Engine, req *http.Request) (gin.H, error) {
 	w := httptest.NewRecorder()
 
-	router.ServeHTTP(w, req)
+	engine.ServeHTTP(w, req)
 
 	result := w.Result()
 	defer result.Body.Close()
@@ -35,8 +59,8 @@ func HttpGetJson(uri string, router *gin.Engine, reqHandle func(*http.Request)) 
 	return jsonResult, nil
 }
 
-func VerifyHttpGetJsonFail(t *testing.T, router *gin.Engine, url string, errCompared gin.H, reqHandle func(*http.Request)) {
-	res, err := HttpGetJson(url, router, reqHandle)
+func VerifyHttpGetJsonFail(t *testing.T, engine *gin.Engine, url string, errCompared gin.H, reqHandle func(*http.Request)) {
+	res, err := HttpGetJson(url, engine, reqHandle)
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,6 +1,8 @@
 package db
 
 import (
+	"fasnap-server-go/entities"
+	"log"
 	"os"
 	"testing"
 )
@@ -25,51 +27,57 @@ func Test_SQLDB_Open(t *testing.T) {
 }
 
 func Test_SQLDB_Insert(t *testing.T) {
-	lastID, err := sqldbTestDB.InsertSnapshotVersion("admin", "2018-01-19", int64(1429))
+	lastID, err := sqldbTestDB.SaveSnapshot("admin", "2018-01-19")
 	if err != nil {
 		t.Error(err)
 	} else if lastID <= 0 {
 		t.Error("lastID <= 0 ", lastID)
 	} else {
 		sqldbtestLastID = lastID
+		log.Println("lastID", lastID)
 	}
 }
 func Test_SQLDB_Update(t *testing.T) {
-	rowCnt, err := sqldbTestDB.UpdateSnapshotVersion(sqldbtestLastID, int64(1430))
+	lastID, err := sqldbTestDB.SaveSnapshot("admin", "2018-01-19")
 	if err != nil {
 		t.Error(err)
-	} else if rowCnt != 1 {
-		t.Error("rowCnt != 1", rowCnt)
+	} else if lastID <= 0 {
+		t.Error("lastID <= 0 ", lastID)
+	} else {
+		sqldbtestLastID = lastID
+		log.Println("lastID", lastID)
 	}
 }
 
 func Test_SQLDB_Get_Exist(t *testing.T) {
-	version, err := sqldbTestDB.GetSnapshotVersion("admin", "2018-01-19")
+	snapshots, err := sqldbTestDB.GetSnapshotList("admin", 0)
 	if err != nil {
 		t.Error(err)
-	} else if version != 1430 {
-		t.Error("version != 1430 ", version)
-	}
-}
-
-func Test_SQLDB_Get_Not_Exist(t *testing.T) {
-	version, err := sqldbTestDB.GetSnapshotVersion("admin1", "2018-01-19")
-	if err == nil {
-		t.Error("version=", version)
+	} else if l := len(snapshots); l != 2 {
+		t.Error("len != 2 ", l)
 	}
 }
 
 func Test_SQLDB_Delete(t *testing.T) {
-	_, err := sqldbTestDB.DeleteSnapshotVersion(sqldbtestLastID)
+	lastID, err := sqldbTestDB.DeleteSnapshot("admin", "2018-01-19")
+	if err != nil {
+		t.Error(err)
+		return
+	} else if lastID <= 0 {
+		t.Error("lastID <= 0 ", lastID)
+	} else {
+		sqldbtestLastID = lastID
+		log.Println("lastID", lastID)
+	}
+
+	snapshot, err := sqldbTestDB.GetSnapshot("admin", "2018-01-19")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	var version int64
-	version, err = sqldbTestDB.GetSnapshotVersion("admin", "2018-01-19")
-	if err == nil || version != 0 {
-		t.Error("Delete fail, data exist yet. lastid, version=", sqldbtestLastID, version)
+	if snapshot.Operation != entities.OPSDel {
+		t.Error("Delete fail, ", snapshot)
 	}
 }
 
